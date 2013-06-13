@@ -42,13 +42,15 @@ GOROOT=$cache/go-$ver/go export GOROOT
 GOPATH=$build/.heroku/g export GOPATH
 PATH=$GOROOT/bin:$PATH
 
+[ -f $build/_godir ] && mv $build/_godir $build/.godir
 name=$(cat $build/.godir)
-mkdir -p $GOPATH
-cp -R $build/* $GOPATH
+p=$GOPATH/src/$name
+mkdir -p $p
+cp -R $build/* $p
 
 unset GIT_DIR # unset git dir or it will mess with goinstall
 echo "-----> Running: go get -tags heroku ./..."
-cd $GOPATH
+cd $p
 go get -tags heroku ./...
 
 mkdir -p $build/bin
