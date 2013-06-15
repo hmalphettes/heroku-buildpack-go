@@ -11,11 +11,24 @@ file=${GOFILE:-go$ver.$(uname|tr A-Z a-z)-amd64.tar.gz}
 url=${GOURL:-http://go.googlecode.com/files/$file}
 buildpack=$(dirname $(dirname $0))
 
-if ! test -f $build/.godir
+
+if test -f $build/.godir
 then
-    echo >&2 " !     A .godir is required. For instructions:"
-    echo >&2 " !     http://mmcgrana.github.com/2012/09/getting-started-with-go-on-heroku"
-    exit 1
+    name=$(cat $build/.godir)
+    echo "       The import path is \"$name\" according to the .godir file"
+else
+    if test -f $build/_godir
+    then
+        name=$(cat $build/_godir)
+        echo "       The import path is \"$name\" according to the _godir file"    
+    else
+        echo >&2 " !     A .godir or _godir file is required and should contain the import path."
+        echo >&2 " !     Execute `golist >_godir` to generate it."
+        echo >&2 " !     _godir is uploaded by cf, .godir is not (Help us improve that)."
+        echo >&2 " !     For further instructions:"
+        echo >&2 " !     http://mmcgrana.github.com/2012/09/getting-started-with-go-on-heroku"
+        exit 1
+    fi
 fi
 
 if test -e $build/bin && ! test -d $build/bin
@@ -42,8 +55,6 @@ GOROOT=$cache/go-$ver/go export GOROOT
 GOPATH=$build/.heroku/g export GOPATH
 PATH=$GOROOT/bin:$PATH
 
-[ -f $build/_godir ] && mv $build/_godir $build/.godir
-name=$(cat $build/.godir)
 p=$GOPATH/src/$name
 mkdir -p $p
 cp -R $build/* $p
